@@ -24,6 +24,103 @@ const SHAPES = [
   { id: 'cross-3', title: 'Крестик 3' },
 ];
 
+const ATLAS_PATH = 'textures/wood_atlas.jpg';
+const ATLAS_UV = {
+  0:  { name: 'Honey Teak',           uv: [0.00, 0.00, 0.25, 0.25] },
+  1:  { name: 'Dark Chocolate',       uv: [0.25, 0.00, 0.50, 0.25] },
+  2:  { name: 'Light Oak',            uv: [0.50, 0.00, 0.75, 0.25] },
+  3:  { name: 'Classic Teak',         uv: [0.75, 0.00, 1.00, 0.25] },
+
+  4:  { name: 'Ash Gray',             uv: [0.00, 0.25, 0.25, 0.50] },
+  5:  { name: 'Charcoal',             uv: [0.25, 0.25, 0.50, 0.50] },
+  6:  { name: 'Silver Gray',          uv: [0.50, 0.25, 0.75, 0.50] },
+  7:  { name: 'Graphite Velvet',      uv: [0.75, 0.25, 1.00, 0.50] },
+
+  8:  { name: 'Mahogany',             uv: [0.00, 0.50, 0.25, 0.75] },
+  9:  { name: 'Walnut',               uv: [0.25, 0.50, 0.50, 0.75] },
+  10: { name: 'Cedar',                uv: [0.50, 0.50, 0.75, 0.75] },
+  11: { name: 'Driftwood',            uv: [0.75, 0.50, 1.00, 0.75] },
+
+  12: { name: 'Light Gray Matte',     uv: [0.00, 0.75, 0.25, 1.00] },
+  13: { name: 'Brown Velvet',         uv: [0.25, 0.75, 0.50, 1.00] },
+  14: { name: 'Quicksand',            uv: [0.50, 0.75, 0.75, 1.00] },
+  15: { name: 'Woodland Premium',     uv: [0.75, 0.75, 1.00, 1.00] },
+};
+
+const HEX_TO_ATLAS = {
+  '#1A1A1A': 5,  // Черный / Черное дерево -> Charcoal
+  '#212121': 5,  // Эбен -> Charcoal
+  '#293133': 5,  // Антрацит -> Charcoal
+  '#383E42': 7,  // Графит -> Graphite Velvet
+  '#4A5568': 7,  // Графит Woodvex -> Graphite Velvet
+  '#808080': 6,  // Серый / Серый микс -> Silver Gray
+  '#93917F': 4,  // Серый дым -> Ash Gray
+  '#F0EBE0': 12, // Белый -> Light Gray Matte
+  '#2F1E0E': 1,  // Венге -> Dark Chocolate
+  '#3B2219': 1,  // Венге Woodvex -> Dark Chocolate
+  '#3D1F10': 1,  // Шоколад -> Dark Chocolate
+  '#3E2723': 13, // Темно-коричневый -> Brown Velvet
+  '#654321': 9,  // Коричневый / Кофе -> Walnut
+  '#5D4037': 9,  // Орех -> Walnut
+  '#C4A77D': 2,  // Дуб -> Light Oak
+  '#C2B280': 14, // Песочный -> Quicksand
+  '#B76E2E': 0,  // Тик -> Honey Teak
+  '#B57C48': 3,  // Тик Woodvex -> Classic Teak
+  '#A07855': 10, // Вуд -> Cedar
+  '#A52A2A': 8,  // Красный -> Mahogany
+  '#8C3B2B': 8,  // Терракот -> Mahogany
+  '#73343A': 8,  // Мербау -> Mahogany
+};
+
+const ATLAS_BASE_HEX = [
+  '#B5783A', '#35251C', '#C4A67D', '#986036',
+  '#A4A6A8', '#262729', '#909294', '#3A3E42',
+  '#5A2C22', '#4E3627', '#7E4E30', '#5C5248',
+  '#D2D3D5', '#443126', '#BAA07E', '#64442A',
+];
+
+function findClosestAtlasIndex(variant) {
+  if (!variant) return 0;
+  const name = `${variant.name || ''} ${variant.colorName || ''}`.toLowerCase();
+
+  // 1. Приоритет: точное попадание по ключевым словам из каталога
+  if (/дуб/i.test(name)) return 2;             // Light Oak
+  if (/тик/i.test(name)) return 0;             // Honey Teak
+  if (/вуд|кедр/i.test(name)) return 10;       // Cedar
+  if (/венге/i.test(name)) return 1;           // Dark Chocolate
+  if (/шоколад/i.test(name)) return 1;        // Dark Chocolate
+  if (/темно.*коричн|тёмно.*коричн/i.test(name)) return 13; // Brown Velvet
+  if (/коричнев|кофе/i.test(name)) return 15;  // Woodland Premium (насыщенный теплый древесный)
+  if (/черн|эбен|антрацит/i.test(name)) return 5; // Charcoal
+  if (/графит/i.test(name)) return 7;          // Graphite Velvet
+  if (/дым|пепел/i.test(name)) return 4;       // Ash Gray
+  if (/серый|серебр/i.test(name)) return 6;    // Silver Gray
+  if (/терракот|красн|мербау/i.test(name)) return 8; // Mahogany
+  if (/песоч/i.test(name)) return 14;          // Quicksand
+  if (/бел/i.test(name)) return 12;            // Light Gray Matte
+  if (/орех/i.test(name)) return 9;            // Walnut
+
+  // 2. Поиск по таблице HEX
+  const clean = (variant.colorHex || '').toUpperCase();
+  if (HEX_TO_ATLAS[clean] !== undefined) return HEX_TO_ATLAS[clean];
+
+  // 3. Fallback: расчет евклидова расстояния RGB
+  const r1 = parseInt(clean.slice(1, 3), 16) || 0;
+  const g1 = parseInt(clean.slice(3, 5), 16) || 0;
+  const b1 = parseInt(clean.slice(5, 7), 16) || 0;
+  let best = 0;
+  let minDist = Infinity;
+  for (let i = 0; i < 16; i++) {
+    const ref = ATLAS_BASE_HEX[i];
+    const r2 = parseInt(ref.slice(1, 3), 16);
+    const g2 = parseInt(ref.slice(3, 5), 16);
+    const b2 = parseInt(ref.slice(5, 7), 16);
+    const d = (r1 - r2) ** 2 + (g1 - g2) ** 2 + (b1 - b2) ** 2;
+    if (d < minDist) { minDist = d; best = i; }
+  }
+  return best;
+}
+
 const FALLBACK_PILLARS = [
   { variantId: 'demo-p100', name: 'Столб 100×100 (демо)', price: 0, image: null,
     dimensions: { width: 100, depth: 100, maxLength: 3000 }, colorHex: '#3b2f2a', textureUrl: null },
@@ -44,7 +141,6 @@ const state = {
   pillar: null,
   baluster: null,
   texture: 'auto',
-  lineColor: '',
   bg: 'white',
 };
 
@@ -69,9 +165,11 @@ function normalizeProducts(json) {
       const vAttrs = variant.attributes || {};
       const hex = vAttrs.color && vAttrs.color.value && vAttrs.color.value.meta &&
         vAttrs.color.value.meta.hex;
+      const colorLabel = (vAttrs.color && vAttrs.color.value && vAttrs.color.value.label) || '';
       out.push({
         variantId: variant.id,
         name: variant.name || product.name,
+        colorName: colorLabel,
         price: (variant.prices && variant.prices.retail) || 0,
         image: variant.preview_picture || product.preview_picture || null,
         dimensions,
@@ -96,8 +194,8 @@ async function loadCatalogData() {
     fetchProducts('pillar'),
   ]);
   return {
-    balusters: balusters.filter((item) => /балясин/i.test(item.name)),
-    pillars,
+    balusters: balusters.filter((item) => !/столб|кронштейн|юбка|крышка/i.test(item.name)),
+    pillars: pillars.filter((item) => /столб/i.test(item.name)),
   };
 }
 
@@ -352,57 +450,92 @@ function createRichSelect(root, items, onChange) {
 const textureLoader = new THREE.TextureLoader();
 textureLoader.setCrossOrigin('anonymous');
 const materialCache = new Map();
-const edgeMaterialCache = new Map();
+const croppedBaseCache = new Map();
+
+const atlasImg = new Image();
+atlasImg.src = ATLAS_PATH;
+atlasImg.onload = () => {
+  croppedBaseCache.clear();
+  clearMaterials();
+  rebuildFence();
+};
+
+function createCroppedTexture(atlas, uv, inset = 0.012) {
+  const [u0, v0, u1, v1] = uv;
+  const w = atlas.image.width || atlas.image.naturalWidth;
+  const h = atlas.image.height || atlas.image.naturalHeight;
+  if (!w || !h) return null;
+
+  const sx = Math.floor((u0 + inset) * w);
+  const sy = Math.floor((v0 + inset) * h);
+  const sw = Math.floor((u1 - u0 - inset * 2) * w);
+  const sh = Math.floor((v1 - v0 - inset * 2) * h);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, sw);
+  canvas.height = Math.max(1, sh);
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(atlas.image, sx, sy, sw, sh, 0, 0, sw, sh);
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.wrapS = THREE.MirroredRepeatWrapping;
+  tex.wrapT = THREE.MirroredRepeatWrapping;
+  if (THREE.SRGBColorSpace) {
+    tex.colorSpace = THREE.SRGBColorSpace;
+  } else if (THREE.sRGBEncoding) {
+    tex.encoding = THREE.sRGBEncoding;
+  }
+  if (renderer && renderer.capabilities && renderer.capabilities.getMaxAnisotropy) {
+    tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  }
+  tex.needsUpdate = true;
+  return tex;
+}
+
+function getAtlasTextureInstance(index, rx, ry, vertical) {
+  if (!atlasImg.complete || !atlasImg.naturalWidth) return null;
+  let base = croppedBaseCache.get(index);
+  if (!base) {
+    const item = ATLAS_UV[index];
+    if (!item) return null;
+    base = createCroppedTexture({ image: atlasImg }, item.uv, 0.012);
+    if (!base) return null;
+    croppedBaseCache.set(index, base);
+  }
+  const tex = base.clone();
+  tex.wrapS = THREE.MirroredRepeatWrapping;
+  tex.wrapT = THREE.MirroredRepeatWrapping;
+  if (vertical) {
+    tex.center.set(0.5, 0.5);
+    tex.rotation = Math.PI / 2;
+  }
+  tex.repeat.set(rx, ry);
+  tex.needsUpdate = true;
+  return tex;
+}
 
 function getMaterial(variant, w, h, poly) {
-  const mode = state.texture;
-  const plain = mode === 'auto';
+  const atlasIndex = state.texture === 'auto'
+    ? findClosestAtlasIndex(variant)
+    : Number(state.texture);
   const vertical = !poly && h > w;
-  let rx = 1;
-  let ry = 1;
-  if (!plain) {
-    if (poly) {
-      rx = ry = mode === 'catalog' ? 1 / 300 : 1 / 200;
-    } else if (mode !== 'catalog') {
-      rx = (vertical ? h : w) / 200;
-      ry = (vertical ? w : h) / 200;
-    }
-  }
-  const key = `${variant.variantId}|${mode}|${vertical}|${rx.toFixed(4)}|${ry.toFixed(4)}`;
+  const rx = poly ? 1 / 250 : (vertical ? h : w) / 300;
+  const ry = poly ? 1 / 250 : (vertical ? w : h) / 300;
+
+  const key = `${variant.variantId}|${atlasIndex}|${vertical}|${rx.toFixed(4)}|${ry.toFixed(4)}`;
   if (materialCache.has(key)) return materialCache.get(key);
 
   const mat = new THREE.MeshStandardMaterial({
-    color: variant.colorHex,
-    roughness: 0.75,
+    color: '#ffffff',
+    roughness: 0.65,
     metalness: 0.05,
   });
 
-  let url = null;
-  if (mode === 'catalog') url = variant.textureUrl;
-  else if (!plain) url = `textures/${mode}.jpg`;
+  const tex = getAtlasTextureInstance(atlasIndex, rx, ry, vertical);
+  if (tex) mat.map = tex;
 
-  if (url) {
-    textureLoader.load(url, (tex) => {
-      tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-      if (mode !== 'catalog' && vertical) {
-        tex.center.set(0.5, 0.5);
-        tex.rotation = Math.PI / 2;
-      }
-      tex.repeat.set(rx, ry);
-      mat.map = tex;
-      mat.color.set('#ffffff');
-      mat.needsUpdate = true;
-    });
-  }
   materialCache.set(key, mat);
   return mat;
-}
-
-function getEdgeMaterial(color) {
-  if (!edgeMaterialCache.has(color)) {
-    edgeMaterialCache.set(color, new THREE.LineBasicMaterial({ color }));
-  }
-  return edgeMaterialCache.get(color);
 }
 
 function clearMaterials() {
@@ -460,11 +593,6 @@ function rebuildFence() {
       mesh.position.set(p.cx, p.cy, 0);
     }
     mesh.name = p.kind;
-
-    if (state.lineColor) {
-      mesh.add(new THREE.LineSegments(
-        new THREE.EdgesGeometry(geometry), getEdgeMaterial(state.lineColor)));
-    }
     fenceGroup.add(mesh);
   });
 
@@ -487,10 +615,13 @@ function initCamera() {
 
 function initScene() {
   scene = new THREE.Scene();
-  scene.add(new THREE.AmbientLight(0xffffff, 0.65));
-  const sun = new THREE.DirectionalLight(0xffffff, 0.8);
-  sun.position.set(1000, 2000, 3000);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.75));
+  const sun = new THREE.DirectionalLight(0xffffff, 0.85);
+  sun.position.set(1500, 2500, 3000);
   scene.add(sun);
+  const fill = new THREE.DirectionalLight(0xffffff, 0.45);
+  fill.position.set(-1500, 1000, 2000);
+  scene.add(fill);
   const back = new THREE.DirectionalLight(0xffffff, 0.35);
   back.position.set(-1500, 800, -2000);
   scene.add(back);
@@ -542,10 +673,6 @@ function initInputs() {
 
   document.querySelector('#texture').addEventListener('change', (e) => {
     state.texture = e.target.value;
-    rebuildFence();
-  });
-  document.querySelector('#lineColor').addEventListener('change', (e) => {
-    state.lineColor = e.target.value;
     rebuildFence();
   });
   document.querySelector('#bg').addEventListener('change', (e) => {
