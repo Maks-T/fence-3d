@@ -79,6 +79,16 @@ const ATLAS_BASE_HEX = [
   '#D2D3D5', '#443126', '#BAA07E', '#64442A',
 ];
 
+const TEXTURE_OPTIONS = [
+  { id: 'auto', name: 'По цвету товара (Атлас)', isAuto: true, colorHex: '#888888' },
+  ...Object.entries(ATLAS_UV).map(([idx, item]) => ({
+    id: String(idx),
+    atlasIndex: Number(idx),
+    name: item.name,
+    colorHex: ATLAS_BASE_HEX[idx] || '#888888',
+  })),
+];
+
 function findClosestAtlasIndex(variant) {
   if (!variant) return 0;
   const name = `${variant.name || ''} ${variant.colorName || ''}`.toLowerCase();
@@ -194,7 +204,7 @@ async function loadCatalogData() {
     fetchProducts('pillar'),
   ]);
   return {
-    balusters: balusters.filter((item) => !/столб|кронштейн|юбка|крышка/i.test(item.name)),
+    balusters: balusters.filter((item) => /балясин/i.test(item.name)),
     pillars: pillars.filter((item) => /столб/i.test(item.name)),
   };
 }
@@ -377,8 +387,18 @@ function createThumb(item, size) {
   const box = document.createElement('div');
   box.className = 'rs-thumb';
   box.style.width = box.style.height = size + 'px';
-  box.style.background = item.colorHex;
-  if (item.image) {
+  box.style.backgroundColor = item.colorHex || '#ccc';
+
+  if (item.isAuto) {
+    box.style.background = 'linear-gradient(135deg, #b5783a 0%, #35251c 50%, #808080 100%)';
+  } else if (item.atlasIndex !== undefined) {
+    const col = item.atlasIndex % 4;
+    const row = Math.floor(item.atlasIndex / 4);
+    box.style.backgroundImage = `url(${ATLAS_PATH})`;
+    box.style.backgroundRepeat = 'no-repeat';
+    box.style.backgroundSize = '400% 400%';
+    box.style.backgroundPosition = `${col * (100 / 3)}% ${row * (100 / 3)}%`;
+  } else if (item.image) {
     const img = document.createElement('img');
     img.src = item.image;
     img.alt = '';
@@ -671,15 +691,16 @@ function initInputs() {
   bind(document.querySelector('#width'), 'width');
   bind(document.querySelector('#height'), 'height');
 
-  document.querySelector('#texture').addEventListener('change', (e) => {
-    state.texture = e.target.value;
-    rebuildFence();
-  });
   document.querySelector('#bg').addEventListener('change', (e) => {
     state.bg = e.target.value;
     changeBackground(state.bg);
   });
   document.querySelector('#data').addEventListener('submit', (e) => e.preventDefault());
+}
+
+function initTextureSelect() {
+  createRichSelect(document.querySelector('#texture'), TEXTURE_OPTIONS,
+    (item) => { state.texture = item.id; rebuildFence(); });
 }
 
 function initCatalogSelects() {
@@ -704,6 +725,7 @@ async function init() {
   initShapeSelector();
   initInputs();
   initCatalogSelects();
+  initTextureSelect();
   rebuildFence();
   animate();
 
