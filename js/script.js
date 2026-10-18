@@ -24,7 +24,7 @@ const SHAPES = [
   { id: 'cross-3', title: 'Крестик 3' },
 ];
 
-const ATLAS_PATH = 'textures/wood_atlas.jpg';
+const ATLAS_PATH = './textures/wood_atlas.jpg';
 const ATLAS_UV = {
   0:  { name: 'Honey Teak',           uv: [0.00, 0.00, 0.25, 0.25] },
   1:  { name: 'Dark Chocolate',       uv: [0.25, 0.00, 0.50, 0.25] },
@@ -634,7 +634,7 @@ function changeBackground(name) {
     scene.background = new THREE.Color(0xffffff);
   } else {
     const loader = new THREE.CubeTextureLoader();
-    loader.setPath(`textures/cube/${name}/`);
+    loader.setPath(`./textures/cube/${name}/`);
     scene.background = loader.load(['px.jpg', 'nx.jpg', 'py.jpg', 'ny.jpg', 'pz.jpg', 'nz.jpg']);
   }
 }
