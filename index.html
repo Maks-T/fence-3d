@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset=utf-8>
+  <title>First Three.js app</title>
+  <style>
+      body { margin: 0; }
+      .content {
+          display: flex;
+          justify-content: space-evenly;
+          padding-top: 100px;
+          width: 100vw;
+      }
+      .options {
+          width: 650px;
+          height: 650px;
+      }
+      form {
+          padding: 40px;
+          box-shadow: 4px 4px 8px 0px rgba(34, 60, 80, 0.2);
+      }
+      .block {
+          display: flex;
+          padding: 3px;
+          border-bottom: 1px dotted silver;
+      }
+      label, .label {
+          width: 300px;
+      }
+      input, select {
+          width: 250px;
+          padding: 2px;
+          margin: 0;
+      }
+      canvas {
+          width: 100%;
+          height: 100%;
+          box-shadow: 4px 4px 8px 0px rgba(34, 60, 80, 0.2);
+      }
+  </style>
+</head>
+<body>
+<div class="content" id="content">
+  <div class="options" id="options">
+    <form action="#" id="data">
+      <div class="calcBlock"><h3>Геометрические параметры</h3></div>
+      <div class="block">
+        <label for="width">Ширина</label>
+        <input type="number" name="width" id="width" value="1500">
+      </div>
+      <div class="block">
+        <label for="height">Высота</label>
+        <input type="number" name="height" id="height" value="1000">
+      </div>
+      <div class="block">
+        <label for="top">Отступ сверху</label>
+        <input type="number" name="top" id="top" value="70">
+      </div>
+      <div class="block">
+        <label for="bottom">Отступ снизу</label>
+        <input type="number" name="bottom" id="bottom" value="50">
+      </div>
+      <div class="block">
+        <label for="count">Количество вертикальных балясин</label>
+        <input type="number" name="count" id="count" value="5">
+      </div>
+      <div class="calcBlock"><h3>Детали</h3></div>
+      <div class="block">
+        <div class="label">Балясина</div>
+        <select name="baluster" id="baluster">
+          <option value="50*50">Балясина 50х50</option>
+          <option value="40*40">Балясина 40х40</option>
+          <option value="60*60">Балясина 60х60</option>
+          <option value="80*80">Балясина 80х80</option>
+        </select>
+      </div>
+      <div class="block">
+        <div class="label">Столб</div>
+        <select name="pillar" id="pillar">
+          <option value="100">Столб 100х100</option>
+          <option value="120">Столб 120х120</option>
+          <option value="160">Столб 160х160</option>
+        </select>
+      </div>
+      <div class="calcBlock"><h3>Настройки внешнего вида</h3></div>
+      <div class="block">
+        <div class="label">Фон</div>
+        <select name="bg" id="bg">
+          <option value="no">Нету</option>
+          <option value="white">Белый</option>
+          <option value="park">Парк</option>
+          <option value="sky">Небо</option>
+        </select>
+      </div>
+      <div class="block">
+        <div class="label">Текстура</div>
+        <select name="texture" id="texture">
+          <option value="no">Нету</option>
+          <option value="wood">Текстура 1</option>
+          <option value="wood1">Текстура 2</option>
+          <option value="wood2">Текстура 3</option>
+          <option value="wood3">Текстура 4</option>
+          <option value="wood4">Текстура 5</option>
+          <option value="wood5">Текстура 6</option>
+        </select>
+      </div>
+      <div class="block">
+        <div class="label">Обводка</div>
+        <select name="lineColor" id="lineColor">
+          <option value="">Нету</option>
+          <option value="#ffffff">Белый</option>
+          <option value="#000000">Черный</option>
+          <option value="#8B4513">Коричневый</option>
+          <option value="#808080">Серый</option>
+        </select>
+      </div>
+    </form>
+  </div>
+</div>
+<script src="js/three.min.js"></script>
+<script src="js/OrbitControls.js"></script>
+<script src="js/script.js"></script>
+</body>
+</html>
