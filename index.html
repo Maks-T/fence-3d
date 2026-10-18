@@ -1,101 +1,128 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-  <meta charset=utf-8>
-  <title>First Three.js app</title>
+  <meta charset="utf-8">
+  <title>Конфигуратор ограждения</title>
   <style>
-      body { margin: 0; }
-      .content {
-          display: flex;
-          justify-content: space-evenly;
-          padding-top: 100px;
-          width: 100vw;
-      }
-      .options {
-          width: 650px;
-          height: 650px;
-      }
-      form {
-          padding: 40px;
-          box-shadow: 4px 4px 8px 0px rgba(34, 60, 80, 0.2);
-      }
-      .block {
-          display: flex;
-          padding: 3px;
-          border-bottom: 1px dotted silver;
-      }
-      label, .label {
-          width: 300px;
-      }
-      input, select {
-          width: 250px;
-          padding: 2px;
-          margin: 0;
-      }
-      canvas {
-          width: 100%;
-          height: 100%;
-          box-shadow: 4px 4px 8px 0px rgba(34, 60, 80, 0.2);
-      }
+    body { margin: 0; font-family: Arial, Helvetica, sans-serif; color: #333; }
+    .content {
+      display: flex;
+      justify-content: space-evenly;
+      align-items: flex-start;
+      padding-top: 60px;
+      width: 100vw;
+    }
+    .options { width: 650px; }
+    form { padding: 30px 40px; box-shadow: 4px 4px 8px 0 rgba(34, 60, 80, .2); }
+    h3 { margin: 18px 0 10px; }
+
+    .block {
+      display: flex;
+      align-items: center;
+      padding: 4px 3px;
+      border-bottom: 1px dotted silver;
+    }
+    .label { width: 200px; flex-shrink: 0; }
+    input[type=number], select.plain {
+      width: 250px; padding: 4px; margin: 0; box-sizing: border-box;
+    }
+    .hint { font-size: 12px; color: #888; margin-left: 8px; }
+
+    /* ----- выбор формы ----- */
+    .shapes {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+    .shape-card {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 8px 4px; background: #fff; cursor: pointer;
+      border: 2px solid transparent; border-radius: 8px;
+      font: inherit; font-size: 12px; color: #555; text-align: center;
+    }
+    .shape-card:hover { background: #fafafa; }
+    .shape-card.active { border-color: #f97316; color: #f97316; }
+    .shape-card svg { width: 100%; height: auto; margin-bottom: 4px; }
+
+    /* ----- кастомный select ----- */
+    .rs { position: relative; width: 250px; }
+    .rs-btn, .rs-item {
+      display: flex; align-items: center; gap: 8px;
+      width: 100%; box-sizing: border-box;
+      padding: 4px 8px; background: #fff; font: inherit; text-align: left;
+    }
+    .rs-btn { border: 1px solid #aaa; border-radius: 4px; cursor: pointer; }
+    .rs-thumb {
+      position: relative; flex-shrink: 0; border-radius: 4px; overflow: hidden;
+      border: 1px solid #ddd;
+    }
+    .rs-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .rs-name { flex: 1; font-size: 13px; line-height: 1.2; }
+    .rs-price { font-size: 12px; color: #f97316; white-space: nowrap; }
+    .rs-chev { font-size: 10px; color: #777; }
+    .rs-list {
+      position: absolute; top: 100%; left: 0; z-index: 20;
+      width: 330px; max-height: 320px; overflow-y: auto;
+      background: #fff; border: 1px solid #aaa; border-radius: 4px;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, .2);
+    }
+    .rs-list[hidden] { display: none; }
+    .rs-item { cursor: pointer; border-bottom: 1px solid #f0f0f0; }
+    .rs-item:hover { background: #fff3e8; }
+
+    #status { font-size: 12px; color: #888; margin-top: 12px; }
+    #status.error { color: #c0392b; }
+
+    canvas {
+      width: 650px; height: 650px;
+      box-shadow: 4px 4px 8px 0 rgba(34, 60, 80, .2);
+    }
   </style>
 </head>
 <body>
 <div class="content" id="content">
   <div class="options" id="options">
     <form action="#" id="data">
-      <div class="calcBlock"><h3>Геометрические параметры</h3></div>
+      <h3 style="margin-top:0">Выберите вид ограждения</h3>
+      <div class="shapes" id="shapes"></div>
+
+      <h3>Габариты секции</h3>
       <div class="block">
-        <label for="width">Ширина</label>
-        <input type="number" name="width" id="width" value="1500">
+        <label class="label" for="width">Ширина, мм</label>
+        <input type="number" name="width" id="width" value="1500" min="800" max="3000" step="10">
+        <span class="hint">800–3000</span>
       </div>
       <div class="block">
-        <label for="height">Высота</label>
-        <input type="number" name="height" id="height" value="1000">
+        <label class="label" for="height">Высота, мм</label>
+        <input type="number" name="height" id="height" value="1000" min="600" max="1500" step="10">
+        <span class="hint">600–1500</span>
       </div>
-      <div class="block">
-        <label for="top">Отступ сверху</label>
-        <input type="number" name="top" id="top" value="70">
-      </div>
-      <div class="block">
-        <label for="bottom">Отступ снизу</label>
-        <input type="number" name="bottom" id="bottom" value="50">
-      </div>
-      <div class="block">
-        <label for="count">Количество вертикальных балясин</label>
-        <input type="number" name="count" id="count" value="5">
-      </div>
-      <div class="calcBlock"><h3>Детали</h3></div>
-      <div class="block">
-        <div class="label">Балясина</div>
-        <select name="baluster" id="baluster">
-          <option value="50*50">Балясина 50х50</option>
-          <option value="40*40">Балясина 40х40</option>
-          <option value="60*60">Балясина 60х60</option>
-          <option value="80*80">Балясина 80х80</option>
-        </select>
-      </div>
+
+      <h3>Детали</h3>
       <div class="block">
         <div class="label">Столб</div>
-        <select name="pillar" id="pillar">
-          <option value="100">Столб 100х100</option>
-          <option value="120">Столб 120х120</option>
-          <option value="160">Столб 160х160</option>
-        </select>
+        <div id="pillar"></div>
       </div>
-      <div class="calcBlock"><h3>Настройки внешнего вида</h3></div>
+      <div class="block">
+        <div class="label">Балясина</div>
+        <div id="baluster"></div>
+      </div>
+
+      <h3>Настройки внешнего вида</h3>
       <div class="block">
         <div class="label">Фон</div>
-        <select name="bg" id="bg">
-          <option value="no">Нету</option>
+        <select class="plain" name="bg" id="bg">
           <option value="white">Белый</option>
+          <option value="no">Нету</option>
           <option value="park">Парк</option>
           <option value="sky">Небо</option>
         </select>
       </div>
       <div class="block">
         <div class="label">Текстура</div>
-        <select name="texture" id="texture">
-          <option value="no">Нету</option>
+        <select class="plain" name="texture" id="texture">
+          <option value="auto">Цвет из каталога</option>
+          <option value="catalog">Фото из каталога</option>
           <option value="wood">Текстура 1</option>
           <option value="wood1">Текстура 2</option>
           <option value="wood2">Текстура 3</option>
@@ -106,7 +133,7 @@
       </div>
       <div class="block">
         <div class="label">Обводка</div>
-        <select name="lineColor" id="lineColor">
+        <select class="plain" name="lineColor" id="lineColor">
           <option value="">Нету</option>
           <option value="#ffffff">Белый</option>
           <option value="#000000">Черный</option>
@@ -114,6 +141,7 @@
           <option value="#808080">Серый</option>
         </select>
       </div>
+      <div id="status"></div>
     </form>
   </div>
 </div>
